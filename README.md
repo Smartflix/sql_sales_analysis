@@ -4,7 +4,7 @@
 
 **Project Title**: Retail Sales Analysis  
 **Level**: Beginner  
-**Database**: `p1_retail_db`
+**Database**: `retail_sale`
 
 This project is designed to demonstrate SQL skills and techniques typically used by data analysts to explore, clean, and analyze retail sales data. The project involves setting up a retail sales database, performing exploratory data analysis (EDA), and answering specific business questions through SQL queries. This project is ideal for those who are starting their journey in data analysis and want to build a solid foundation in SQL.
 
@@ -19,26 +19,22 @@ This project is designed to demonstrate SQL skills and techniques typically used
 
 ### 1. Database Setup
 
-- **Database Creation**: The project starts by creating a database named `p1_retail_db`.
+- **Database Creation**: The project starts by creating a database named `projectsales`.
 - **Table Creation**: A table named `retail_sales` is created to store the sales data. The table structure includes columns for transaction ID, sale date, sale time, customer ID, gender, age, product category, quantity sold, price per unit, cost of goods sold (COGS), and total sale amount.
 
 ```sql
-CREATE DATABASE p1_retail_db;
+CREATE DATABASE projectsales;
 
 CREATE TABLE retail_sales
-(
-    transactions_id INT PRIMARY KEY,
-    sale_date DATE,	
-    sale_time TIME,
-    customer_id INT,	
-    gender VARCHAR(10),
-    age INT,
-    category VARCHAR(35),
-    quantity INT,
-    price_per_unit FLOAT,	
-    cogs FLOAT,
-    total_sale FLOAT
-);
+the dataset was imported using the table dataimport wizard while the curson is on the the table menu. then the workbench is refreshed .A copy of the table is created and its called retail_sale_staging. This ensures that based on best practise, you dont carry out CRUD on your original dataset.
+using a create function.
+CREATE TABLE retail_sale_staging
+like retail_sale
+Then populate the new table with the data from the original dataset using
+
+insert retail_sales_staging
+select * from retail_sales
+;
 ```
 
 ### 2. Data Exploration & Cleaning
@@ -73,7 +69,7 @@ The following SQL queries were developed to answer specific business questions:
 1. **Write a SQL query to retrieve all columns for sales made on '2022-11-05**:
 ```sql
 SELECT *
-FROM retail_sales
+FROM retail_sales_staging
 WHERE sale_date = '2022-11-05';
 ```
 
@@ -81,11 +77,11 @@ WHERE sale_date = '2022-11-05';
 ```sql
 SELECT 
   *
-FROM retail_sales
+FROM retail_sales_staging
 WHERE 
     category = 'Clothing'
     AND 
-    TO_CHAR(sale_date, 'YYYY-MM') = '2022-11'
+    DATE_FORMAT(sale_date ,'%Y-%m') = '2022-11'
     AND
     quantity >= 4
 ```
@@ -96,7 +92,7 @@ SELECT
     category,
     SUM(total_sale) as net_sale,
     COUNT(*) as total_orders
-FROM retail_sales
+FROM retail_sales_staging
 GROUP BY 1
 ```
 
@@ -104,13 +100,13 @@ GROUP BY 1
 ```sql
 SELECT
     ROUND(AVG(age), 2) as avg_age
-FROM retail_sales
+FROM retail_sales_staging
 WHERE category = 'Beauty'
 ```
 
 5. **Write a SQL query to find all transactions where the total_sale is greater than 1000.**:
 ```sql
-SELECT * FROM retail_sales
+SELECT * FROM retail_sales_staging
 WHERE total_sale > 1000
 ```
 
@@ -120,7 +116,7 @@ SELECT
     category,
     gender,
     COUNT(*) as total_trans
-FROM retail_sales
+FROM retail_sales_staging
 GROUP 
     BY 
     category,
@@ -137,11 +133,11 @@ SELECT
 FROM 
 (    
 SELECT 
-    EXTRACT(YEAR FROM sale_date) as year,
-    EXTRACT(MONTH FROM sale_date) as month,
-    AVG(total_sale) as avg_sale,
-    RANK() OVER(PARTITION BY EXTRACT(YEAR FROM sale_date) ORDER BY AVG(total_sale) DESC) as rank
-FROM retail_sales
+    year(sale_date) as Year,
+    month(sale_date) as Month,
+    avg(total_sale) as Average_Sales,
+    rank()over(partition by year(sale_date) order by avg(total_sale) desc) as ranking
+FROM retail_sales_staging
 GROUP BY 1, 2
 ) as t1
 WHERE rank = 1
@@ -152,7 +148,7 @@ WHERE rank = 1
 SELECT 
     customer_id,
     SUM(total_sale) as total_sales
-FROM retail_sales
+FROM retail_sales_staging
 GROUP BY 1
 ORDER BY 2 DESC
 LIMIT 5
@@ -163,7 +159,7 @@ LIMIT 5
 SELECT 
     category,    
     COUNT(DISTINCT customer_id) as cnt_unique_cs
-FROM retail_sales
+FROM retail_sales_staging
 GROUP BY category
 ```
 
@@ -174,11 +170,11 @@ AS
 (
 SELECT *,
     CASE
-        WHEN EXTRACT(HOUR FROM sale_time) < 12 THEN 'Morning'
-        WHEN EXTRACT(HOUR FROM sale_time) BETWEEN 12 AND 17 THEN 'Afternoon'
-        ELSE 'Evening'
-    END as shift
-FROM retail_sales
+    WHEN hour(sale_time)  <= 12 THEN 'Morning'
+    WHEN hour(sale_time) between 12 and 17 THEN 'Afternoon'
+    ELSE 'Evening'
+	END as shift
+from retail_sales_staging
 )
 SELECT 
     shift,
@@ -211,17 +207,8 @@ This project serves as a comprehensive introduction to SQL for data analysts, co
 3. **Run the Queries**: Use the SQL queries provided in the `analysis_queries.sql` file to perform your analysis.
 4. **Explore and Modify**: Feel free to modify the queries to explore different aspects of the dataset or answer additional business questions.
 
-## Author - Zero Analyst
+
 
 This project is part of my portfolio, showcasing the SQL skills essential for data analyst roles. If you have any questions, feedback, or would like to collaborate, feel free to get in touch!
 
-### Stay Updated and Join the Community
 
-For more content on SQL, data analysis, and other data-related topics, make sure to follow me on social media and join our community:
-
-- **YouTube**: [Subscribe to my channel for tutorials and insights](https://www.youtube.com/@zero_analyst)
-- **Instagram**: [Follow me for daily tips and updates](https://www.instagram.com/zero_analyst/)
-- **LinkedIn**: [Connect with me professionally](https://www.linkedin.com/in/najirr)
-- **Discord**: [Join our community to learn and grow together](https://discord.gg/36h5f2Z5PK)
-
-Thank you for your support, and I look forward to connecting with you!
